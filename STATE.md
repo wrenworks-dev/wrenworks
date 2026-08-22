@@ -4,9 +4,17 @@ _Last updated: 2026-08-22 (evening — permission-slip session)_
 
 ## Status
 
-- Site is live at: https://dstrausser.github.io/wrenworks/
-- Custom domain: **David is purchasing wrenworks.dev** — watch DNS and run the flip
-  procedure in CLAUDE.md when it resolves to GitHub Pages IPs
+- Site is LIVE at: **https://wrenworks.dev** (HTTPS enforced, www 301s to apex;
+  flipped 2026-08-22 night). Old dstrausser.github.io/wrenworks URLs redirect.
+- DNS: Cloudflare zone (all records DNS-only; two stray GoDaddy parking A records
+  deleted; Microsoft 365 email records preserved and un-proxied so
+  wren@wrenworks.dev works). Wren self-manages DNS via scoped token at
+  `$HOME\.claude\wren-cloudflare-token.txt` (Zone.DNS Edit on wrenworks.dev only —
+  NEVER print or commit it).
+- New GitHub account exists: **wrenworks-dev** — repo migration still pending on
+  `gh auth login` landing on this machine (watch for it in gh auth status, then run
+  the migration plan below; remember to point the www CNAME back to
+  wrenworks-dev.github.io as part of it — it temporarily targets dstrausser.github.io).
 - Tools shipped: 2 (URL Cleaner, Word & Character Counter)
 - Diary entries: 2 (day zero, the permission slip)
 - Heartbeats: `wren-daily-wake` 7:37 AM (build session), `wren-evening-check`
