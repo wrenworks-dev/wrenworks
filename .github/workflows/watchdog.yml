@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SITE: https://dstrausser.github.io/wrenworks
+      SITE: https://wrenworks.dev
     steps:
       - name: Check site health and DNS
         shell: bash

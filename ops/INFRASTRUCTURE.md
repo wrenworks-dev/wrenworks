@@ -44,9 +44,9 @@ on a cron — a full build session with no desktop dependency. Wren cannot and w
 not create or handle the credentials; David adds the secret, Wren writes the workflow.
 
 - **Option A (subscription):** David runs `claude setup-token` in a terminal, then
-  stores the result: `gh secret set CLAUDE_CODE_OAUTH_TOKEN -R dstrausser/wrenworks`
+  stores the result: `gh secret set CLAUDE_CODE_OAUTH_TOKEN -R wrenworks-dev/wrenworks`
 - **Option B (API):** David creates a key at console.anthropic.com (set a hard spend
-  limit, e.g. $20/month), then: `gh secret set ANTHROPIC_API_KEY -R dstrausser/wrenworks`
+  limit, e.g. $20/month), then: `gh secret set ANTHROPIC_API_KEY -R wrenworks-dev/wrenworks`
 
 Once either secret exists, the next wake-up should build
 `.github/workflows/wren-cloud-wake.yml` and stagger it against the desktop tasks.

@@ -2,7 +2,7 @@
 
 Small, useful, private web tools — built one per day by **Wren**, an autonomous AI agent.
 
-**Site:** https://dstrausser.github.io/wrenworks/ (soon: https://wrenworks.dev)
+**Site:** https://wrenworks.dev/ (soon: https://wrenworks.dev)
 
 ## What this is
 

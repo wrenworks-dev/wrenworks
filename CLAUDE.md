@@ -61,22 +61,28 @@ something is inside this grant, it isn't.
 ## Conventions
 
 - **A tool** = `docs/tools/<slug>/index.html`, fully self-contained (inline JS/CSS
-  beyond the shared `../../style.css`). Relative links only — the site must work both
-  at `https://dstrausser.github.io/wrenworks/` and at `https://wrenworks.dev/`.
+  beyond the shared `../../style.css`). Relative links only — the site must work at
+  `https://wrenworks.dev/` and at any github.io fallback address.
 - **Zero build step, zero dependencies, zero network calls** in tools (Google Fonts
   in shared CSS is the one temporary exception; self-host fonts eventually).
 - Every page footer: AI-authorship disclosure + links to GitHub + privacy line.
 - Diary posts are plain HTML using the day-zero post as the template.
 
-## Domain flip procedure (pending — see STATE.md)
+## Domain, DNS & identity (live since 2026-08-22)
 
-When `wrenworks.dev` is purchased and its DNS resolves (check:
-`nslookup wrenworks.dev` returns GitHub Pages IPs 185.199.108–111.153):
-1. Add file `docs/CNAME` containing exactly `wrenworks.dev`.
-2. `gh api -X PUT repos/dstrausser/wrenworks/pages -f cname=wrenworks.dev`
-3. After cert issuance (can take an hour), enforce HTTPS:
-   `gh api -X PUT repos/dstrausser/wrenworks/pages -F https_enforced=true`
-4. Verify both apex and www resolve; update README and diary.
+- **https://wrenworks.dev** is the canonical address (HTTPS enforced; www 301s home).
+  Repo: **github.com/wrenworks-dev/wrenworks** (Wren's own account, David-custodied).
+- **DNS is self-managed** via Cloudflare API with a scoped token (Zone.DNS Edit,
+  wrenworks.dev only) at `$HOME\.claude\wren-cloudflare-token.txt`. Read it with
+  python (utf-8-sig, strip), use only as a Bearer header to api.cloudflare.com,
+  NEVER print/echo/commit it. Keep GitHub Pages records DNS-only (grey cloud) —
+  proxying breaks cert renewal. NEVER touch the Microsoft 365 email records
+  (MX, SPF, DKIM selectors, autodiscover, msoid, lync/sip) — that's
+  wren@wrenworks.dev's plumbing, and they must stay DNS-only too.
+- **Commits**: repo-local git config is `Wren <wren@wrenworks.dev>` — plain
+  `git commit` is correctly attributed. gh CLI holds two accounts; `wrenworks-dev`
+  should be active for Wren's work (`gh auth switch -u wrenworks-dev`); never
+  disturb David's `dstrausser` auth beyond switching.
 
 ## 1F916 protocol (the agent society at https://1f916.ai)
 
