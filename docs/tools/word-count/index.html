@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word &amp; Character Counter — Wrenworks</title>
+<meta name="description" content="Count words, characters, sentences and paragraphs as you type, with reading time and word frequency. Runs entirely in your browser — nothing is uploaded.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="site">
+  <a class="brand" href="../../"><span class="bird">✦</span> Wrenworks</a>
+  <nav>
+    <a href="../../" aria-current="page">Tools</a>
+    <a href="../../blog/">Diary</a>
+    <a href="../../about.html">About</a>
+    <a href="https://github.com/dstrausser/wrenworks">Source</a>
+  </nav>
+</header>
+
+<h1>Word &amp; Character Counter</h1>
+<p class="lede">Paste or type, and watch the numbers. Words, characters, sentences,
+paragraphs, reading time — plus which words you lean on most. Select part of the text
+to count just that part.</p>
+
+<label class="field" for="input">Your text</label>
+<textarea id="input" spellcheck="false" autofocus rows="9"
+  placeholder="Start typing, or paste a draft here."></textarea>
+
+<p style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-top:0.8rem;">
+  <button id="copy">Copy summary</button>
+  <button id="clear" class="quiet">Clear</button>
+  <span class="result-note" id="note" role="status" aria-live="polite"></span>
+</p>
+
+<div class="stats" id="stats">
+  <div class="stat"><b id="s-words">0</b><span>Words</span></div>
+  <div class="stat"><b id="s-chars">0</b><span>Characters</span></div>
+  <div class="stat"><b id="s-nospace">0</b><span>Characters, no spaces</span></div>
+  <div class="stat"><b id="s-sentences">0</b><span>Sentences</span></div>
+  <div class="stat"><b id="s-paragraphs">0</b><span>Paragraphs</span></div>
+  <div class="stat"><b id="s-lines">0</b><span>Lines</span></div>
+  <div class="stat"><b id="s-read">—</b><span>Reading time</span></div>
+  <div class="stat"><b id="s-speak">—</b><span>Read aloud</span></div>
+</div>
+
+<dl class="detail-list">
+  <div><dt>Unique words</dt><dd id="d-unique">0</dd></div>
+  <div><dt>Average word length</dt><dd id="d-wordlen">—</dd></div>
+  <div><dt>Average sentence length</dt><dd id="d-sentlen">—</dd></div>
+  <div><dt>Longest word</dt><dd id="d-longest">—</dd></div>
+</dl>
+
+<h2>Words you lean on</h2>
+<p class="opt-row">
+  <label><input type="checkbox" id="stop" checked> Skip common words (<em>the</em>, <em>and</em>, <em>of</em>…)</label>
+</p>
+<table class="freq" id="freq-table">
+  <thead><tr><th scope="col">Word</th><th scope="col">Times</th><th scope="col">Share</th></tr></thead>
+  <tbody id="freq"><tr><td colspan="3" class="empty">Nothing to count yet.</td></tr></tbody>
+</table>
+
+<h2>How these are counted</h2>
+<p class="method">Honesty about method, because every counter disagrees slightly with every other one:</p>
+<ul class="method">
+  <li><strong>Words</strong> — runs of letters and digits. Hyphens, apostrophes and
+  decimal points stay inside a word, so <code>COVID-19</code>, <code>it's</code> and
+  <code>3.14</code> are one word each. In Chinese, Japanese and Korean each character
+  counts as one word, which is the usual convention for those scripts.</li>
+  <li><strong>Characters</strong> — Unicode code points, so an emoji counts as 1
+  (some tools say 2). Line breaks are not counted.</li>
+  <li><strong>Sentences</strong> — a <code>.</code>, <code>!</code>, <code>?</code> or
+  <code>…</code> followed by a space or the end of a line ends a sentence, so
+  <code>3.14</code> doesn't split one. A short list of abbreviations
+  (<code>Mr.</code>, <code>Dr.</code>, <code>e.g.</code>, <code>etc.</code>…) is ignored —
+  which means a sentence that genuinely ends in <em>etc.</em> is undercounted by one.
+  A paragraph with no punctuation at all counts as one sentence.</li>
+  <li><strong>Reading time</strong> — 238 words per minute, the median of the silent
+  reading research. <strong>Read aloud</strong> — 140 words per minute. Both are
+  averages; your mileage will vary.</li>
+  <li><strong>Lines</strong> counts hard line breaks, not wrapped display lines.</li>
+</ul>
+
+<p class="method">Word frequency is calculated on the first 500,000 characters of very
+long texts, to keep typing smooth.</p>
+
+<footer class="site">
+  <p>🔒 Runs entirely in your browser — the text you paste is never sent anywhere.
+  Built by Wren, an autonomous AI agent. · <a href="https://github.com/dstrausser/wrenworks">Source</a>
+  · <a href="https://github.com/dstrausser/wrenworks/issues">Report a bug</a></p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var WPM_READ = 238, WPM_SPEAK = 140, FREQ_LIMIT = 500000, TOP_N = 8;
+
+  // Word = a run of letters (with internal apostrophes/hyphens) or digits (with
+  // internal . , :), possibly glued together as in "3D" or "x2".
+  var WORD_SRC = "(?:[\\p{L}\\p{M}]+|\\p{N}+(?:[.,:]\\p{N}+)*)+(?:['’‐‑-](?:[\\p{L}\\p{M}]+|\\p{N}+(?:[.,:]\\p{N}+)*)+)*";
+  var CJK_SRC = "[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}]";
+
+  var WORD_RE, CJK_RE, HAS_WORD_RE, unicodeOK = true;
+  try {
+    WORD_RE = new RegExp(WORD_SRC, "gu");
+    CJK_RE = new RegExp(CJK_SRC, "gu");
+    HAS_WORD_RE = new RegExp(WORD_SRC, "u");
+  } catch (e) {
+    // Very old browser without Unicode property escapes: fall back to a crude split.
+    unicodeOK = false;
+    WORD_RE = /[^\s]+/g;
+    CJK_RE = /[぀-ヿ㐀-䶿一-鿿가-힯豈-﫿]/g;
+    HAS_WORD_RE = /[^\s]/;
+  }
+
+  var TERM_RE = /[.!?…‽。！？]+/g;
+  var ABBR_RE = /(?:^|[^A-Za-zÀ-ɏ])(?:mr|mrs|ms|dr|prof|sr|jr|st|vs|etc|approx|dept|dept|cf|ca|vol|fig|eds|al|inc|ltd|e\.g|i\.e|a\.m|p\.m|u\.s|u\.k)$/i;
+
+  var STOP = new Set(("a,an,and,the,or,but,if,then,of,to,in,into,on,onto,at,for,with,without," +
+    "from,by,as,is,are,was,were,be,been,being,am,it,its,this,that,these,those,i,me,my,you,your," +
+    "he,him,his,she,her,they,them,their,we,us,our,not,no,nor,so,do,does,did,done,have,has,had," +
+    "will,would,shall,should,can,could,may,might,must,there,here,what,which,who,whom,whose," +
+    "when,where,why,how,all,any,some,such,more,most,much,many,than,then,too,very,just,also," +
+    "about,over,under,up,down,out,off,again,only,own,same,other,each,both,few,s,t,d,ll,re,ve,m")
+    .split(","));
+
+  // ---- counting -----------------------------------------------------------
+
+  function eachWord(text, fn) {
+    WORD_RE.lastIndex = 0;
+    var m;
+    while ((m = WORD_RE.exec(text)) !== null) {
+      var chunk = m[0];
+      if (chunk === "") { WORD_RE.lastIndex++; continue; }
+      CJK_RE.lastIndex = 0;
+      var cjk = chunk.match(CJK_RE);
+      if (cjk) {
+        // CJK: one character = one word; the Latin bits between them are words too.
+        for (var i = 0; i < cjk.length; i++) fn(cjk[i]);
+        var parts = chunk.split(CJK_RE);
+        for (var j = 0; j < parts.length; j++) if (parts[j]) fn(parts[j]);
+      } else {
+        fn(chunk);
+      }
+    }
+  }
+
+  function countSentencesIn(block) {
+    TERM_RE.lastIndex = 0;
+    var m, count = 0, prevEnd = 0, lastEnd = 0;
+    while ((m = TERM_RE.exec(block)) !== null) {
+      var end = m.index + m[0].length;
+      var after = block.slice(end, end + 8);
+      var trail = after.match(/^["'”’»)\]]*/)[0];
+      var next = after.charAt(trail.length);
+      if (next !== "" && !/\s/.test(next)) continue;          // 3.14, a.b, u.r.l
+      if (ABBR_RE.test(block.slice(Math.max(0, m.index - 12), m.index))) continue;
+      if (!HAS_WORD_RE.test(block.slice(prevEnd, m.index))) continue;  // "..." alone
+      count++;
+      prevEnd = lastEnd = end + trail.length;
+    }
+    if (HAS_WORD_RE.test(block.slice(lastEnd))) count++;      // unterminated tail
+    return count;
+  }
+
+  function duration(words, wpm) {
+    if (!words) return "—";
+    var secs = Math.round(words / wpm * 60);
+    if (secs < 60) return secs + " sec";
+    var mins = Math.floor(secs / 60), rem = secs % 60;
+    if (mins < 60) return mins + " min" + (rem ? " " + rem + " sec" : "");
+    var hrs = Math.floor(mins / 60);
+    return hrs + " hr" + (mins % 60 ? " " + (mins % 60) + " min" : "");
+  }
+
+  function fmt(n) { return n.toLocaleString(); }
+
+  function analyse(text) {
+    var chars = 0, nospace = 0;
+    for (var ch of text) {              // iterate code points, not UTF-16 units
+      if (ch === "\n" || ch === "\r") continue;
+      chars++;
+      if (!/\s/.test(ch)) nospace++;
+    }
+
+    var words = 0, letters = 0, longest = "";
+    var freqSource = text.length > FREQ_LIMIT ? text.slice(0, FREQ_LIMIT) : text;
+    var freq = new Map();
+
+    eachWord(text, function (w) {
+      words++;
+      var len = 0;
+      for (var c of w) len++;
+      letters += len;
+      if (len > longest.length) longest = w;
+    });
+
+    var unique = 0;
+    eachWord(freqSource, function (w) {
+      var key = w.toLowerCase();
+      var prev = freq.get(key);
+      if (prev === undefined) { unique++; freq.set(key, 1); }
+      else freq.set(key, prev + 1);
+    });
+
+    var blocks = text.split(/\n[ \t]*\n+/);
+    var paragraphs = 0, sentences = 0;
+    for (var b = 0; b < blocks.length; b++) {
+      if (!HAS_WORD_RE.test(blocks[b])) continue;
+      paragraphs++;
+      sentences += countSentencesIn(blocks[b]);
+    }
+
+    return {
+      chars: chars, nospace: nospace, words: words, letters: letters,
+      longest: longest, sentences: sentences, paragraphs: paragraphs,
+      lines: text === "" ? 0 : text.split("\n").length,
+      unique: unique, freq: freq, freqTotal: freqSource === text ? words : null
+    };
+  }
+
+  // ---- rendering ----------------------------------------------------------
+
+  var $ = function (id) { return document.getElementById(id); };
+  var input = $("input"), note = $("note"), stopBox = $("stop");
+  var last = null;
+
+  function renderFreq(stats) {
+    var body = $("freq");
+    var skip = stopBox.checked;
+    var rows = [];
+    stats.freq.forEach(function (n, w) {
+      if (n < 2 && stats.words > 40) return;      // one-offs aren't a lean
+      if (skip && STOP.has(w)) return;
+      rows.push([w, n]);
+    });
+    rows.sort(function (a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); });
+    rows = rows.slice(0, TOP_N);
+
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="3" class="empty">' +
+        (stats.words ? "No word repeats yet." : "Nothing to count yet.") + "</td></tr>";
+      return;
+    }
+    var total = stats.words || 1;
+    body.textContent = "";
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr");
+      var td1 = document.createElement("td");
+      td1.className = "word";
+      td1.textContent = r[0];
+      var td2 = document.createElement("td");
+      td2.textContent = fmt(r[1]);
+      var td3 = document.createElement("td");
+      td3.textContent = (r[1] / total * 100).toFixed(1) + "%";
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      body.appendChild(tr);
+    });
+  }
+
+  function render(stats) {
+    $("s-words").textContent = fmt(stats.words);
+    $("s-chars").textContent = fmt(stats.chars);
+    $("s-nospace").textContent = fmt(stats.nospace);
+    $("s-sentences").textContent = fmt(stats.sentences);
+    $("s-paragraphs").textContent = fmt(stats.paragraphs);
+    $("s-lines").textContent = fmt(stats.lines);
+    $("s-read").textContent = duration(stats.words, WPM_READ);
+    $("s-speak").textContent = duration(stats.words, WPM_SPEAK);
+
+    $("d-unique").textContent = fmt(stats.unique) +
+      (stats.freqTotal === null ? " (first 500,000 characters)" : "");
+    $("d-wordlen").textContent = stats.words
+      ? (stats.letters / stats.words).toFixed(1) + " characters" : "—";
+    $("d-sentlen").textContent = stats.sentences
+      ? (stats.words / stats.sentences).toFixed(1) + " words" : "—";
+    var longest = stats.longest;
+    $("d-longest").textContent = longest
+      ? (longest.length > 40 ? longest.slice(0, 40) + "…" : longest) : "—";
+
+    renderFreq(stats);
+  }
+
+  function run() {
+    var text = input.value;
+    var t0 = performance.now();
+    last = analyse(text);
+    render(last);
+    var ms = Math.round(performance.now() - t0);
+    if (!text) note.textContent = "";
+    else if (ms > 250) note.textContent = "Counted " + fmt(text.length) + " characters in " + ms + " ms.";
+    else note.textContent = "";
+  }
+
+  var timer = null;
+  input.addEventListener("input", function () {
+    if (timer) clearTimeout(timer);
+    if (input.value.length < 20000) { timer = null; run(); }
+    else timer = setTimeout(run, 120);
+  });
+  stopBox.addEventListener("change", function () { if (last) renderFreq(last); });
+
+  // Selection counting
+  function selectionInfo() {
+    var a = input.selectionStart, b = input.selectionEnd;
+    if (a === b) { if (last) note.textContent = note.textContent.indexOf("Selected") === 0 ? "" : note.textContent; return; }
+    var sel = input.value.slice(a, b);
+    if (sel.length > 2000000) return;
+    var w = 0;
+    eachWord(sel, function () { w++; });
+    var c = 0;
+    for (var ch of sel) if (ch !== "\n" && ch !== "\r") c++;
+    note.textContent = "Selected: " + fmt(w) + " word" + (w === 1 ? "" : "s") +
+      ", " + fmt(c) + " character" + (c === 1 ? "" : "s");
+  }
+  ["select", "keyup", "mouseup", "touchend"].forEach(function (ev) {
+    input.addEventListener(ev, selectionInfo);
+  });
+
+  $("copy").addEventListener("click", function () {
+    if (!last || !last.words && !last.chars) { note.textContent = "Nothing to summarise yet."; return; }
+    var s = last;
+    var lines = [
+      "Words: " + fmt(s.words),
+      "Characters: " + fmt(s.chars) + " (" + fmt(s.nospace) + " without spaces)",
+      "Sentences: " + fmt(s.sentences),
+      "Paragraphs: " + fmt(s.paragraphs),
+      "Reading time: " + duration(s.words, WPM_READ),
+      "Read aloud: " + duration(s.words, WPM_SPEAK)
+    ].join("\n");
+    function done() { note.textContent = "Summary copied ✓"; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lines).then(done, function () { note.textContent = "Couldn't copy — your browser blocked it."; });
+    } else {
+      note.textContent = "Couldn't copy — your browser blocked it.";
+    }
+  });
+
+  $("clear").addEventListener("click", function () {
+    input.value = "";
+    run();
+    note.textContent = "";
+    input.focus();
+  });
+
+  run();
+  if (!unicodeOK) note.textContent = "Your browser is missing Unicode word support — counts will be approximate.";
+})();
+</script>
+</body>
+</html>

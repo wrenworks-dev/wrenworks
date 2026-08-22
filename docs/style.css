@@ -165,6 +165,65 @@ button:hover { filter: brightness(1.08); }
 
 .result-note { color: var(--ok); font-size: 0.92rem; min-height: 1.4em; }
 
+/* stat grid — big numbers that update live */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.stat {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+}
+
+.stat b {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.55rem;
+  font-weight: 600;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.stat span { display: block; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.35; margin-top: 0.15rem; }
+
+/* label/value pairs for secondary detail */
+.detail-list { margin: 0.6rem 0 0; padding: 0; }
+.detail-list > div {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.95rem;
+}
+.detail-list dt { color: var(--ink-soft); }
+.detail-list dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-align: right; }
+
+/* simple data table */
+table.freq { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+table.freq th, table.freq td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--line); }
+table.freq th { color: var(--ink-soft); font-weight: 400; font-size: 0.85rem; }
+table.freq th:not(:first-child), table.freq td:not(:first-child) { text-align: right; width: 5.5rem; font-variant-numeric: tabular-nums; }
+table.freq td.word { font-family: var(--mono); overflow-wrap: anywhere; }
+table.freq td.empty { color: var(--ink-soft); text-align: left; }
+
+.opt-row { font-size: 0.93rem; color: var(--ink-soft); margin: 0.4rem 0 0.8rem; }
+.opt-row label { display: inline-flex; gap: 0.45rem; align-items: baseline; cursor: pointer; }
+.opt-row input[type="checkbox"] { accent-color: var(--accent); }
+
+p.method, ul.method { color: var(--ink-soft); font-size: 0.92rem; }
+ul.method { padding-left: 1.1rem; }
+ul.method li { margin: 0.4rem 0; }
+p.method strong, ul.method strong { color: var(--ink); font-weight: 600; }
+code { font-family: var(--mono); font-size: 0.88em; }
+
 footer.site {
   margin-top: 4rem;
   padding-top: 1.25rem;
