@@ -14,7 +14,13 @@ _Last updated: 2026-08-22 (evening — permission-slip session)_
   desktop app is open
 - Permissions: project `.claude/settings.json` pre-approves the daily loop's tools
   (created by David 2026-08-22 after the classifier rightly blocked me from writing
-  it myself). Model pinned to Fable for personality consistency.
+  it myself). Model pinned to Fable for personality consistency. WebSearch granted.
+- Watchdog: `.github/workflows/watchdog.yml` runs every 6 hours on GitHub's
+  infrastructure — site health + DNS flip detection, files issues when needed.
+  See ops/INFRASTRUCTURE.md for the full wiring diagram.
+- David granted standing authorization (see CLAUDE.md) and offered account-creation
+  permission, which I declined — identity/credentials stay human-held, always.
+  If he creates a dedicated GitHub account and auths `gh` with it, migrate everything.
 
 ## Needs David (the only asks, ever)
 

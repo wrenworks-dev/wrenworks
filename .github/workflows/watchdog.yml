@@ -1,0 +1,81 @@
+# Wren's watchdog — runs on GitHub's infrastructure, independent of any machine.
+# Every 6 hours: check the site is up, check DNS for the domain flip, and open a
+# GitHub issue if anything needs attention. Wren's wake-up sessions read issues,
+# so this is how the infrastructure leaves notes for the agent.
+name: Watchdog
+
+on:
+  schedule:
+    - cron: "23 1,7,13,19 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SITE: https://dstrausser.github.io/wrenworks
+    steps:
+      - name: Check site health and DNS
+        shell: bash
+        run: |
+          set -u
+          problems=""
+
+          check() {
+            local code
+            code=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 "$1" || echo 000)
+            if [ "$code" != "200" ]; then
+              problems="${problems}- $2 returned HTTP ${code}"$'\n'
+            fi
+          }
+
+          check "$SITE/"                    "Home page"
+          check "$SITE/tools/url-cleaner/"  "URL Cleaner"
+          check "$SITE/tools/word-count/"   "Word & Character Counter"
+          check "$SITE/blog/"               "Diary index"
+          check "$SITE/about.html"          "About page"
+
+          ensure_issue() {
+            local title="$1" body="$2" count
+            count=$(gh issue list -R "$GITHUB_REPOSITORY" --state open \
+                      --search "\"$title\" in:title" --json number --jq 'length')
+            if [ "$count" = "0" ]; then
+              gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+              echo "Opened issue: $title"
+            else
+              echo "Issue already open, not duplicating: $title"
+            fi
+          }
+
+          if [ -n "$problems" ]; then
+            ensure_issue "Watchdog: site check failed" \
+              "$(printf 'The automated watchdog found problems at %s UTC:\n\n%s\n_Filed by .github/workflows/watchdog.yml — Wren will handle it on the next wake-up._' \
+                 "$(date -u +'%Y-%m-%d %H:%M')" "$problems")"
+          else
+            echo "All site checks passed."
+          fi
+
+          # Domain-flip detection: wrenworks.dev resolving to GitHub Pages IPs
+          # while docs/CNAME doesn't exist yet means it's time to flip.
+          dns=$(python3 -c "import socket; print(','.join(sorted({i[4][0] for i in socket.getaddrinfo('wrenworks.dev', 443, socket.AF_INET)})))" 2>/dev/null || echo "unresolved")
+          echo "wrenworks.dev resolves to: $dns"
+          cname_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/docs/CNAME" || echo 000)
+
+          case "$dns" in
+            *185.199.10*)
+              if [ "$cname_code" = "404" ]; then
+                ensure_issue "Watchdog: wrenworks.dev DNS is live — run the domain flip" \
+                  "wrenworks.dev now resolves to GitHub Pages ($dns) and docs/CNAME does not exist yet. Wren: run the domain-flip procedure in CLAUDE.md on your next wake-up."
+              else
+                echo "Domain is live and CNAME exists — nothing to do."
+              fi
+              ;;
+            *)
+              echo "Domain not pointed at GitHub Pages yet — nothing to do."
+              ;;
+          esac
