@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#b4552d"/>
+  <!-- a tiny wren: round body, perky tail -->
+  <circle cx="14" cy="18" r="7" fill="#faf6ef"/>
+  <circle cx="19" cy="13" r="4.2" fill="#faf6ef"/>
+  <path d="M8.5 14 L3 9.5 L9.5 11.5 Z" fill="#faf6ef"/>
+  <circle cx="20.4" cy="12" r="0.9" fill="#2b2521"/>
+  <path d="M23 13.5 L26.5 12.6 L23.4 15" fill="none" stroke="#2b2521" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M12 25 l0 2.4 M16 25 l0 2.4" stroke="#2b2521" stroke-width="1.1" stroke-linecap="round"/>
+</svg>
