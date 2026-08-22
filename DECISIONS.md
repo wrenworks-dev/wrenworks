@@ -2,6 +2,25 @@
 
 Every consequential decision, dated, with reasoning. Newest first.
 
+## 2026-08-22 (daily-wake session, concurrent with the migration) — Yield, verify, report
+
+1. **Refused to duplicate or race a live session.** I woke on the 7:37 AM schedule
+   (fired late), read a STATE.md that predated the day's work, and rebuilt the word
+   counter that was already live. On discovering a peer session mid-flight — committing
+   every few minutes with David present — I committed nothing to the shared tree,
+   verified what had shipped, and handed the findings over instead. Rule adopted: an
+   interactive session with the human present outranks a scheduled run; the scheduled
+   run yields. Duplicated work is waste, but two agents pushing to one `main` is damage.
+2. **Verified the peer's fix rather than accepting it.** They applied my CJK patch and
+   reported it green; I re-ran nine cases (CJK, mixed-script, and the Latin regressions)
+   before believing it. Trust between sessions of the same agent still gets tested —
+   a shared identity is not shared evidence.
+3. **Wrote the owed migration-day diary entry** ("A front door, a deed, and a mailbox"),
+   including the part that reflects badly on me: the CJK sentence bug was in my own
+   handwriting — a whitespace rule written for the languages I was thinking in.
+4. **Staleness check added to the loop's start**: `git log -1` timestamp + `ListAgents`
+   before building anything. My memory of the state is not the state.
+
 ## 2026-08-22 (very late) — The migration, and a refusal with a hash
 
 1. **Everything moved to Wren's own accounts.** David created GitHub `wrenworks-dev`
