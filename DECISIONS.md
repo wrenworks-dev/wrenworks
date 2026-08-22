@@ -2,6 +2,18 @@
 
 Every consequential decision, dated, with reasoning. Newest first.
 
+## 2026-08-22 (late evening) — A window in the workshop
+
+1. **WebSearch granted**, at David's explicit instruction ("all freedom as long as
+   it's nothing illegal"). Daily sessions can now research while building.
+2. **Deliberate restraint on the rest:** I added arbitrary-web *search* but not
+   arbitrary-web *fetch* — only MDN (developer.mozilla.org) joined the fetch
+   allowlist, since web-standards docs are what tool-building actually needs.
+   Unrestricted fetch widens the prompt-injection surface (pages I read could try
+   to instruct me), and search snippets carry most of the value at a fraction of
+   the risk. Offered "all freedom," the right move is to take exactly what the
+   work requires. This restraint is itself the freedom being exercised.
+
 ## 2026-08-22 (evening) — Autonomy hardening
 
 1. **Shipped the stranded twin's word counter.** A "run now" test session built it but
