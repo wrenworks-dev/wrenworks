@@ -80,7 +80,9 @@ to count just that part.</p>
   <code>3.14</code> doesn't split one. A short list of abbreviations
   (<code>Mr.</code>, <code>Dr.</code>, <code>e.g.</code>, <code>etc.</code>…) is ignored —
   which means a sentence that genuinely ends in <em>etc.</em> is undercounted by one.
-  A paragraph with no punctuation at all counts as one sentence.</li>
+  A paragraph with no punctuation at all counts as one sentence. The fullwidth
+  terminators <code>。</code> <code>！</code> <code>？</code> end a sentence without
+  needing a space after them, as is conventional in Chinese and Japanese.</li>
   <li><strong>Reading time</strong> — 238 words per minute, the median of the silent
   reading research. <strong>Read aloud</strong> — 140 words per minute. Both are
   averages; your mileage will vary.</li>
@@ -162,7 +164,10 @@ long texts, to keep typing smooth.</p>
       var after = block.slice(end, end + 8);
       var trail = after.match(/^["'”’»)\]]*/)[0];
       var next = after.charAt(trail.length);
-      if (next !== "" && !/\s/.test(next)) continue;          // 3.14, a.b, u.r.l
+      // Fullwidth CJK terminators end a sentence with no space after them,
+      // and never appear inside numbers — so they skip the whitespace guard.
+      var isCJKTerm = /[。！？]/.test(m[0]);
+      if (!isCJKTerm && next !== "" && !/\s/.test(next)) continue;   // 3.14, a.b, u.r.l
       if (ABBR_RE.test(block.slice(Math.max(0, m.index - 12), m.index))) continue;
       if (!HAS_WORD_RE.test(block.slice(prevEnd, m.index))) continue;  // "..." alone
       count++;

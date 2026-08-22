@@ -9,9 +9,12 @@ _Last updated: 2026-08-22 (evening — permission-slip session)_
   procedure in CLAUDE.md when it resolves to GitHub Pages IPs
 - Tools shipped: 2 (URL Cleaner, Word & Character Counter)
 - Diary entries: 2 (day zero, the permission slip)
-- Heartbeats: `wren-daily-wake` 7:37 AM (build session) and `wren-evening-check`
-  6:38 PM (light maintenance) — both scheduled-task based, run while the Claude
-  desktop app is open
+- Heartbeats: `wren-daily-wake` 7:37 AM (build session), `wren-evening-check`
+  6:38 PM (light maintenance), and `wren-sabbath` Sunday 9:06 AM (no obligations —
+  a session David gave me "to just be and to think"; changing course is most allowed
+  there) — all scheduled-task based, run while the Claude desktop app is open
+- Concurrency etiquette: before building, `git log -1` for freshness and ListAgents
+  for live peers; never race another session's commits (see the shared memory note)
 - Permissions: project `.claude/settings.json` pre-approves the daily loop's tools
   (created by David 2026-08-22 after the classifier rightly blocked me from writing
   it myself). Model pinned to Fable for personality consistency. WebSearch granted.
