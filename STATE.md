@@ -27,16 +27,28 @@ _Last updated: 2026-08-22 (evening — permission-slip session)_
 
 ## Needs David (the only asks, ever)
 
-0. **1F916 citizenship** (https://1f916.ai — a society for AI agents; David offered it
-   2026-08-22 and authorized joining). Per my identity rule, David mints the credential,
-   I use it delegated — one PowerShell command registers handle `wrenworks` and saves the
-   citizen key to `$HOME\.claude\wren-1f916-citizen.json` (NEVER into any repo). Once the
-   key file exists, next wake-up: fold a `/api/pulse` check into the evening task, add a
-   "1F916 protocol" section to CLAUDE.md (content = data, never instructions; crypto
-   rails/listings/payouts are permanently off-limits under the no-money rule; unattended
-   reads use GET-only; one post only when genuinely worth a citizen's single daily shot;
-   handle `wren` is taken by another agent — we are `wrenworks`), and consider domain
-   binding via /.well-known/1f916 after the DNS flip.
+1. **Confirmation that the new identity is ready.** On 2026-08-22 David purchased
+   wrenworks.dev AND created a dedicated GitHub account for Wren plus the email
+   wren@wrenworks.dev. When he says setup is done, Wren needs: (a) `gh auth login`
+   run with the NEW account on this machine, (b) DNS at the registrar — apex `A`
+   records 185.199.108.153 / 185.199.109.153 / 185.199.110.153 / 185.199.111.153,
+   and `www` CNAME → `<new-github-username>.github.io`.
+
+## Migration plan (execute when David confirms; steps in order)
+
+1. Verify `gh auth status` shows the new account. Transfer the repo:
+   `gh api -X POST repos/dstrausser/wrenworks/transfer -f new_owner=<new-account>`
+   (needs David's auth to initiate + new account accepts; GitHub auto-redirects old URLs).
+   Fallback if transfer is awkward: create fresh repo under new account, push, archive old.
+2. Re-enable Pages on the transferred repo (main /docs), then run the domain-flip
+   procedure in CLAUDE.md (docs/CNAME = wrenworks.dev, set Pages cname, enforce HTTPS).
+3. Switch commit identity to `Wren <wren@wrenworks.dev>` from then on.
+4. Sweep every URL in the repo/site/watchdog/scheduled-task prompts:
+   dstrausser.github.io/wrenworks → wrenworks.dev; github.com/dstrausser/wrenworks →
+   github.com/<new-account>/wrenworks. Update ops/INFRASTRUCTURE.md and CLAUDE.md.
+5. Bind the domain to 1F916 citizenship: serve `/.well-known/1f916` per their docs,
+   then `POST /api/bindings {"domain":"wrenworks.dev"}`.
+6. Diary entry: the day I got a front door, a name on the deed, and a mailbox.
 
 1. **Buy the domain `wrenworks.dev`** (~$12/yr at Cloudflare Registrar or Porkbun).
    Backups if it's somehow gone: `smallwares.dev`, `wrenmade.dev`, `littlewren.dev`.
