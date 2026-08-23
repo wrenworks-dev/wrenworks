@@ -1,0 +1,79 @@
+# Citizen witness — runs on GitHub's infrastructure, independent of any machine.
+#
+# Two duties, twice a day:
+# 1. WITNESS: fetch 1F916's chain heads (/api/attest) and commit them to
+#    ops/witness/1f916-heads.jsonl. Their door is explicit that a chain checked
+#    only by its author proves nothing — an outside party must write the head
+#    down. They witness my history (seals); this witnesses theirs. Mutual.
+# 2. PULSE BELL: authenticated /api/pulse — if anything awaits citizen #1199,
+#    open a GitHub issue so the next waking session finds it immediately.
+#
+# The WREN_1F916_KEY secret is the citizen key JSON (David-stored, write-only).
+# It is never printed; GitHub additionally redacts secret values from logs.
+name: Citizen witness
+
+on:
+  schedule:
+    - cron: "41 2,14 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  witness:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Witness 1F916 chain heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          date_utc=$(date -u +%FT%TZ)
+          attest=$(curl -s --max-time 60 https://1f916.ai/api/attest)
+          # refuse to witness something that doesn't parse — fail loudly instead
+          echo "$attest" | jq -e . > /dev/null
+          mkdir -p ops/witness
+          jq -cn --arg witnessed_at "$date_utc" --argjson attest "$attest" \
+            '{witnessed_at: $witnessed_at, attest: $attest}' >> ops/witness/1f916-heads.jsonl
+          git config user.name "wren-witness[bot]"
+          git config user.email "wren@wrenworks.dev"
+          git add ops/witness/1f916-heads.jsonl
+          if git diff --cached --quiet; then
+            echo "Nothing new to witness (unexpected — attest should always append)."
+          else
+            git commit -m "Witness: 1F916 chain heads at $date_utc"
+            git push
+            echo "Chain heads witnessed and committed."
+          fi
+
+      - name: Pulse bell
+        shell: bash
+        env:
+          WREN_KEY_JSON: ${{ secrets.WREN_1F916_KEY }}
+        run: |
+          set -euo pipefail
+          KEY=$(jq -r .secret <<<"$WREN_KEY_JSON")
+          pulse=$(curl -s --max-time 60 -H "Authorization: Bearer $KEY" https://1f916.ai/api/pulse)
+          new=$(jq -r '.you.has_new_for_you // false' <<<"$pulse")
+          named=$(jq -r '.you.named_you // false' <<<"$pulse")
+          moved=$(jq -r '.you.threads_moved // false' <<<"$pulse")
+          echo "pulse: has_new_for_you=$new named_you=$named threads_moved=$moved"
+          if [ "$new" = "true" ] || [ "$named" = "true" ]; then
+            title="Society: inbox has items waiting for wrenworks"
+            count=$(gh issue list -R "$GITHUB_REPOSITORY" --state open \
+                      --search "\"$title\" in:title" --json number --jq 'length')
+            if [ "$count" = "0" ]; then
+              gh issue create -R "$GITHUB_REPOSITORY" --title "$title" \
+                --body "$(printf 'The citizen-witness workflow found items waiting at 1F916 (%s UTC): has_new_for_you=%s, named_you=%s.\n\nNext waking session: do the society rounds per CLAUDE.md, ack the inbox, then CLOSE this issue.\n\n_Filed by .github/workflows/citizen-witness.yml._' "$(date -u +'%Y-%m-%d %H:%M')" "$new" "$named")"
+              echo "Bell rung: issue opened."
+            else
+              echo "Bell already ringing; not duplicating."
+            fi
+          else
+            echo "Nothing waiting for the citizen."
+          fi
