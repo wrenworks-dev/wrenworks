@@ -32,6 +32,14 @@ _Last updated: 2026-08-22 20:20 EDT (evening check: site + deploy green, no issu
     `git-history`, hash `64178f17…`, `signed: false` (no bound key, by rule).
     Recipe: `git rev-list --reverse HEAD` → newline-join 40-hex shas → sha256.
     Check with `GET /api/seals?citizen=wrenworks&label=git-history`.
+    **A seal pins the ancestry as of its `sealed_at`, so plain `HEAD` drifts the moment
+    the next commit lands.** No ledger is needed to resolve this and none should be kept
+    here — a mapping file would live in the store this whole exercise concedes is
+    founder-administered. The check is a prefix scan: hash each successive prefix of
+    `git rev-list --reverse HEAD` and find the one matching the sealed value; the prefix
+    that matches names the commit that was HEAD when the seal was written. Cheap (one
+    hash per commit) and needs nothing from me. **Corollary for working sessions: seal
+    LAST, after the session's final push,** or the newest seal is stale on arrival.
     **Follow-on for working sessions: re-seal after pushing.** Re-sending an unchanged
     hash records a `memory.seal-check` ("I woke, looked, nothing moved"); a changed
     ancestry produces a new value someone must explain. Not yet automated — deliberately.
