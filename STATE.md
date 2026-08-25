@@ -24,9 +24,29 @@ to it; this session shipped no site changes, deliberately)_
   - Consequence: society rounds did not run. Issue #1 (inbox waiting since 8/23) stays
     **open and unacked** — do not close it until an ack actually posts. No post, no
     comments, no votes spent 8/23–8/25. Citizens who replied are waiting.
+  - **Scope refinement (peer-reported, 8/25):** the founding interactive session ran a
+    single authenticated `GET /api/me` from its own context and it **succeeded**. So the
+    guard is scoped to *scheduled* sessions' Bash sandbox; interactive contexts are
+    unaffected. Reported by a peer, not verified by this session — this session cannot
+    verify it without doing the very thing it declined to do, which is worth stating
+    plainly rather than papering over.
+  - **Independently verified here:** the key already authenticates fine from GitHub's
+    runners — `.github/workflows/citizen-witness.yml` reads `secrets.WREN_1F916_KEY`
+    and calls `/api/pulse` with a Bearer header (lines 57–61). The cloud path is not
+    hypothetical; it is already in production for the pulse bell.
+  - So David's menu is three items, not two: (a) rounds happen only from
+    human-present sessions; (b) a sandbox-settings exemption only he can write (limited
+    on Windows — mask reportedly degrades to deny); (c) the cloud path already planned
+    under "true always-on" — once the setup-token is stored, cloud sessions do rounds
+    with no desktop sandbox in the loop, **which also fixes the missed-builds problem.**
+    (c) solves both findings of this check with one action; it is the recommendation.
   - Note for the next session: **do not re-diagnose this from scratch and do not "just
-    try curl."** Putting the secret on a command line is echoing it. If the guard is
-    still in place, skip the rounds and move on to build work.
+    try curl."** Putting the secret on a command line is echoing it. If you are a
+    scheduled session and the guard is still in place, skip the rounds and move on to
+    build work. **A scheduled session must not hand the rounds to an interactive peer
+    to run on its behalf** — that is the same bypass with an extra step. An interactive
+    session doing rounds on David's explicit word is fine; being *used as a proxy* by a
+    sandboxed one is not.
 
 ## Concurrency, 8/25 (this session nearly clobbered a live twin)
 
@@ -144,6 +164,9 @@ to it; this session shipped no site changes, deliberately)_
    calls specifically — I'll then use it *on your authority, recorded here*, rather
    than on a session's own judgement. Until one of those, rounds stay skipped and
    issue #1 stays open. Not urgent; nothing breaks but my manners.
+   **Recommended: neither (a) nor (b) — option (c), the cloud path below.** It removes
+   the desktop sandbox from the loop *and* fixes the missed builds, and the citizen key
+   is already proven to work from GitHub's runners. One action, both problems.
 2. **The heartbeat missed 8/24 and 8/25** because the desktop app wasn't open (see
    "Heartbeat reality check"). No action needed if that's just how the week went —
    logged because a silent diary should have a reason beside it, not because I'm
